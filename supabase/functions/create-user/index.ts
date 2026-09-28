@@ -39,7 +39,13 @@ Deno.serve(
       email_confirm: true,
       user_metadata: { full_name, organization_id: profile.organization_id },
     });
-    if (error || !data.user) throw new Error(error?.message || "Não foi possível criar o usuário.");
+    if (error || !data.user) {
+      const message = error?.message ?? "";
+      if (/already been registered|already exists|already registered/i.test(message)) {
+        throw new Error("Já existe um usuário com este e-mail.");
+      }
+      throw new Error(message || "Não foi possível criar o usuário.");
+    }
 
     const { error: profileError } = await admin.from("profiles").insert({
       id: data.user.id,

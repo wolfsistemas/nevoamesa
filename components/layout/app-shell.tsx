@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -14,6 +14,7 @@ import {
   Sun,
   WifiOff,
   Menu,
+  UserRound,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -23,6 +24,12 @@ import { PushPrompt } from "@/hooks/use-push";
 import { APP_NAME, ROLE_LABEL } from "@/lib/constants";
 import { canOperateCash, canOperateKitchen, canOperateWaiter, canViewReports } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -45,16 +52,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const online = useOnline();
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
-  const [onlineReady, setOnlineReady] = useState(false);
+  const prevOnline = useRef<boolean | null>(null);
 
   useEffect(() => {
-    if (!onlineReady) {
-      setOnlineReady(true);
+    if (prevOnline.current === null) {
+      prevOnline.current = online;
       return;
     }
+    if (prevOnline.current === online) return;
+    prevOnline.current = online;
     if (!online) toast.warning("Você está offline.");
     else toast.success("Conexão restaurada.");
-  }, [online, onlineReady]);
+  }, [online]);
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace("/login/");
+  }
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login/");
@@ -121,10 +135,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={async () => {
-                  await signOut();
-                  router.replace("/login/");
-                }}
+                onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4" /> Sair
               </Button>
@@ -137,13 +148,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="text-sm font-semibold">{APP_NAME}</div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Menu do usuário">
+                  <UserRound className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <div className="px-2 py-1.5">
+                  <div className="text-sm font-medium">{user.profile.full_name}</div>
+                  <div className="text-xs text-muted-foreground">{ROLE_LABEL[user.profile.primary_role]}</div>
+                </div>
+                <DropdownMenuItem onSelect={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                  {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  {theme === "dark" ? "Tema claro" : "Tema escuro"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void handleSignOut()}>
+                  <LogOut className="mr-2 h-4 w-4" /> Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </header>
           {open ? (
             <div className="border-b border-border bg-surface p-3 lg:hidden">
@@ -159,6 +183,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
               </div>
+              <Button variant="outline" className="mt-2 w-full" onClick={() => void handleSignOut()}>
+                <LogOut className="h-4 w-4" /> Sair
+              </Button>
             </div>
           ) : null}
           <main className="flex-1 p-4 pb-28 lg:p-6">{children}</main>

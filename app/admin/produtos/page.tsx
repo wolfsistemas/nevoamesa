@@ -152,56 +152,118 @@ export default function ProductsPage() {
             <DialogTitle>{editing ? "Editar produto" : "Novo produto"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
-            <Input placeholder="Nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <Textarea
-              placeholder="Descrição"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-            />
-            <Input
-              type="number"
-              placeholder="Preço"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-            />
-            <Input
-              type="number"
-              placeholder="Custo"
-              value={form.cost}
-              onChange={(e) => setForm({ ...form, cost: Number(e.target.value) })}
-            />
-            <select
-              className="h-10 rounded-md border border-border bg-background px-3"
-              value={form.category_id}
-              onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-            >
-              <option value="">Categoria</option>
-              {(categories ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="h-10 rounded-md border border-border bg-background px-3"
-              value={form.kitchen_sector_id}
-              onChange={(e) => setForm({ ...form, kitchen_sector_id: e.target.value })}
-            >
-              <option value="">Setor</option>
-              {(sectors ?? []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-1">
+              <Label htmlFor="product-name">Nome do produto</Label>
+              <Input
+                id="product-name"
+                placeholder="Ex: Hambúrguer artesanal"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="product-description">Descrição</Label>
+              <Textarea
+                id="product-description"
+                placeholder="Ingredientes, tamanho, observações (opcional)"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="product-price">Valor de venda (R$)</Label>
+                <Input
+                  id="product-price"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="product-cost">Custo (R$)</Label>
+                <Input
+                  id="product-cost"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={form.cost}
+                  onChange={(e) => setForm({ ...form, cost: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="product-category">Categoria</Label>
+              <select
+                id="product-category"
+                className="h-10 w-full rounded-md border border-border bg-background px-3"
+                value={form.category_id}
+                onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+              >
+                <option value="">Sem categoria</option>
+                {(categories ?? []).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="product-sector">Setor de produção</Label>
+              <select
+                id="product-sector"
+                className="h-10 w-full rounded-md border border-border bg-background px-3"
+                value={form.kitchen_sector_id}
+                onChange={(e) => setForm({ ...form, kitchen_sector_id: e.target.value })}
+              >
+                <option value="">Sem setor</option>
+                {(sectors ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="flex items-center justify-between">
-              <Label>Ativo</Label>
+              <Label>Ativo para venda</Label>
               <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
             </div>
             <div className="flex items-center justify-between">
               <Label>Controla estoque</Label>
               <Switch checked={form.control_stock} onCheckedChange={(v) => setForm({ ...form, control_stock: v })} />
             </div>
+            {form.control_stock ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="product-stock">Quantidade em estoque</Label>
+                  <Input
+                    id="product-stock"
+                    type="number"
+                    min={0}
+                    step="1"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={form.stock_qty}
+                    onChange={(e) => setForm({ ...form, stock_qty: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="product-unit">Unidade</Label>
+                  <Input
+                    id="product-unit"
+                    placeholder="un, kg, L..."
+                    value={form.unit}
+                    onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                  />
+                </div>
+              </div>
+            ) : null}
             <Button onClick={save}>Salvar</Button>
           </div>
         </DialogContent>
