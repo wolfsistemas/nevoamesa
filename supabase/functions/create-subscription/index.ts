@@ -50,6 +50,9 @@ Deno.serve(
         status: "trialing",
         trial_ends_at: trialEnd,
         current_period_end: trialEnd,
+        cancel_at_period_end: false,
+        canceled_at: null,
+        mp_status: null,
       };
       if (existing) await admin.from("subscriptions").update(row).eq("id", existing.id);
       else await admin.from("subscriptions").insert(row);

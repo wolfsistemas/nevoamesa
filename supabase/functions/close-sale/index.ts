@@ -1,7 +1,19 @@
 import { audit, assertRole, handle, requireUser } from "../_shared/auth.ts";
 import { json } from "../_shared/cors.ts";
 
+const METHODS = ["CASH", "PIX", "DEBIT", "CREDIT", "OTHER"];
+
 type PayInput = { method: string; amount: number };
+
+function validatePayments(payments: PayInput[]) {
+  if (!Array.isArray(payments) || !payments.length) {
+    throw new Error("Informe ao menos uma forma de pagamento.");
+  }
+  for (const payment of payments) {
+    if (!METHODS.includes(payment.method)) throw new Error("Forma de pagamento inválida.");
+    if (!(Number(payment.amount) > 0)) throw new Error("Cada pagamento deve ter valor maior que zero.");
+  }
+}
 
 Deno.serve(
   handle(async (req) => {
@@ -10,7 +22,8 @@ Deno.serve(
     const body = await req.json();
     const attendanceId = String(body.attendance_id ?? "");
     const payments = (body.payments ?? []) as PayInput[];
-    if (!attendanceId || !payments.length) throw new Error("Informe o atendimento e os pagamentos.");
+    if (!attendanceId) throw new Error("Informe o atendimento.");
+    validatePayments(payments);
 
     const orgId = profile.organization_id;
     const { data: attendance } = await admin
@@ -20,7 +33,8 @@ Deno.serve(
       .eq("organization_id", orgId)
       .single();
     if (!attendance) throw new Error("Atendimento não encontrado.");
-    if (attendance.status === "CLOSED") throw new Error("Este pedido já foi finalizado.");
+    if (attendance.status === "CLOSED") throw new Error("Este atendimento já foi finalizado.");
+    if (attendance.status === "CANCELLED") throw new Error("Atendimento cancelado não pode ser fechado.");
 
     const { data: existingSale } = await admin
       .from("sales")
@@ -61,12 +75,12 @@ Deno.serve(
       );
     }, 0);
 
-    const discount = Number(body.discount_amount) || 0;
-    const serviceFee = Number(body.service_fee) || 0;
-    const total = Math.max(0, subtotal - discount + serviceFee);
+    const discount = Math.max(0, Number(body.discount_amount) || 0);
+    const serviceFee = Math.max(0, Number(body.service_fee) || 0);
+    const total = Math.max(0, subtotal - Math.min(discount, subtotal) + serviceFee);
     const paid = payments.reduce((acc, p) => acc + Number(p.amount), 0);
     if (Math.abs(paid - total) > 0.05) {
-      throw new Error("O valor pago não confere com o total da conta.");
+      throw new Error(`O valor pago (R$ ${paid.toFixed(2)}) não confere com o total (R$ ${total.toFixed(2)}).`);
     }
 
     const { data: sale, error: saleError } = await admin
@@ -81,10 +95,15 @@ Deno.serve(
         discount_amount: discount,
         service_fee: serviceFee,
         total,
+        status: "ACTIVE",
       })
       .select("*")
       .single();
-    if (saleError || !sale) throw new Error("Não foi possível registrar a venda. Tente novamente.");
+    if (saleError) {
+      if (saleError.code === "23505") throw new Error("Esta venda já foi registrada.");
+      throw new Error("Não foi possível registrar a venda. Tente novamente.");
+    }
+    if (!sale) throw new Error("Não foi possível registrar a venda. Tente novamente.");
 
     await admin.from("sale_payments").insert(
       payments.map((p) => ({
@@ -130,7 +149,11 @@ Deno.serve(
       .neq("status", "CLOSED");
 
     await admin.from("tables").update({ status: "FREE" }).eq("id", attendance.table_id);
-    await admin.from("orders").update({ status: "DELIVERED" }).eq("attendance_id", attendanceId).neq("status", "CANCELLED");
+    await admin
+      .from("orders")
+      .update({ status: "DELIVERED" })
+      .eq("attendance_id", attendanceId)
+      .neq("status", "CANCELLED");
     await audit(admin, orgId, profile.id, "close", "sale", sale.id, { total, attendanceId });
     return json({ sale });
   }),

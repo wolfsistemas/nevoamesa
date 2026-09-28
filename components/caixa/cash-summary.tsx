@@ -21,7 +21,13 @@ export function CashSummary({
   const sales = sum("SALE");
   const supplies = sum("SUPPLY");
   const withdrawals = sum("WITHDRAWAL");
-  const expected = Number(register.opening_amount) + sales + supplies - withdrawals;
+  const adjustments = sum("ADJUSTMENT");
+  const refunds = movements
+    .filter((m) => m.type === "REFUND" && m.payment_method === "CASH")
+    .reduce((acc, m) => acc + Number(m.amount), 0);
+  const cashSales = method("CASH");
+  const expected =
+    Number(register.opening_amount) + cashSales + supplies + adjustments - withdrawals - refunds;
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -65,6 +71,12 @@ export function CashSummary({
           <CardTitle>Suprimentos</CardTitle>
         </CardHeader>
         <CardContent className="text-xl font-semibold text-success">{formatCurrency(supplies)}</CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Estornos (dinheiro)</CardTitle>
+        </CardHeader>
+        <CardContent className="text-xl font-semibold text-danger">{formatCurrency(refunds)}</CardContent>
       </Card>
     </div>
   );

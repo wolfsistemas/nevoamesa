@@ -108,12 +108,14 @@ Funções em `supabase/functions`:
 - `cancel-subscription`
 - `mp-webhook` (JWT desligado)
 - `send-push`
+- `refund-sale` (estorno de venda)
 
 Secrets extras das functions:
 
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
 - `MP_ACCESS_TOKEN` (opcional até a cobrança real)
+- `MP_WEBHOOK_SECRET` (valida a assinatura do webhook)
 
 Publicar:
 

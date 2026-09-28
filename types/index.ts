@@ -176,6 +176,7 @@ export interface Attendance {
   discount_percent: number;
   service_fee: number;
   total: number;
+  refunded_total: number;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -274,6 +275,10 @@ export interface Sale {
   discount_amount: number;
   service_fee: number;
   total: number;
+  status: string;
+  refunded_at: string | null;
+  refund_amount: number;
+  refund_reason: string | null;
   created_at: string;
 }
 

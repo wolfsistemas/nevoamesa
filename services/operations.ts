@@ -147,6 +147,10 @@ export async function cancelOrder(orderId: string, reason?: string) {
   return invokeFunction("cancel-order", { order_id: orderId, reason });
 }
 
+export async function refundSale(saleId: string, reason?: string, restock = false) {
+  return invokeFunction("refund-sale", { sale_id: saleId, reason, restock });
+}
+
 export async function transferTable(attendanceId: string, targetTableId: string) {
   return invokeFunction("transfer-table", {
     attendance_id: attendanceId,

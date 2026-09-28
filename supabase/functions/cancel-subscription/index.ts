@@ -8,6 +8,7 @@ Deno.serve(
     const orgId = profile.organization_id;
     const { data: sub } = await admin.from("subscriptions").select("*").eq("organization_id", orgId).maybeSingle();
     if (!sub) throw new Error("Nenhuma assinatura encontrada.");
+    if (sub.status === "canceled") return json({ ok: true, status: "canceled" });
 
     const token = Deno.env.get("MP_ACCESS_TOKEN");
     if (token && sub.mp_preapproval_id) {
@@ -29,12 +30,13 @@ Deno.serve(
       .from("subscriptions")
       .update({
         status: "canceled",
-        cancel_at_period_end: true,
+        cancel_at_period_end: false,
         canceled_at: new Date().toISOString(),
-        mp_status: "cancelled",
+        mp_status: token ? "cancelled" : sub.mp_status,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", sub.id);
+      .eq("id", sub.id)
+      .neq("status", "canceled");
     await audit(admin, orgId, profile.id, "cancel", "subscription", sub.id, {});
     return json({ ok: true, status: "canceled" });
   }),
