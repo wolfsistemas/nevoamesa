@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/app-shell";
@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/use-auth";
 import { useRealtimeTable } from "@/hooks/use-realtime";
+import { connectKitchenPrinter, printKitchenTicket } from "@/lib/bluetooth-print";
+import { enablePushNotifications } from "@/lib/push";
+import { friendlyError } from "@/lib/utils";
 import { listKitchenSectors } from "@/services/catalog";
 import { listKitchenTickets, markOrderStatus, updateKitchenTicket } from "@/services/operations";
-import type { KitchenTicketStatus } from "@/types";
+import type { KitchenTicket, KitchenTicketStatus } from "@/types";
 
 const COLUMNS: Array<{ status: KitchenTicketStatus; title: string }> = [
   { status: "NEW", title: "Novos" },
@@ -25,6 +28,10 @@ export default function KitchenPage() {
   const queryClient = useQueryClient();
   const [sectorId, setSectorId] = useState<string>("all");
   const [flash, setFlash] = useState(false);
+  const [printerName, setPrinterName] = useState<string | null>(null);
+  const [autoPrint, setAutoPrint] = useState(false);
+  const seenTickets = useRef<Set<string>>(new Set());
+  const primed = useRef(false);
 
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["kitchen", orgId] });
@@ -55,6 +62,22 @@ export default function KitchenPage() {
     }));
   }, [tickets]);
 
+  useEffect(() => {
+    if (!tickets) return;
+    if (!primed.current) {
+      tickets.forEach((ticket) => seenTickets.current.add(ticket.id));
+      primed.current = true;
+      return;
+    }
+    const incoming = tickets.filter((ticket) => ticket.status === "NEW" && !seenTickets.current.has(ticket.id));
+    incoming.forEach((ticket) => seenTickets.current.add(ticket.id));
+    if (autoPrint && printerName) {
+      incoming.forEach((ticket) => {
+        printKitchenTicket(ticket).catch(() => undefined);
+      });
+    }
+  }, [tickets, autoPrint, printerName]);
+
   async function advance(ticketId: string, current: KitchenTicketStatus, orderId?: string) {
     const next = current === "NEW" ? "PREPARING" : current === "PREPARING" ? "READY" : "READY";
     await updateKitchenTicket(ticketId, next);
@@ -72,7 +95,40 @@ export default function KitchenPage() {
             <h1 className="text-2xl font-bold">Cozinha</h1>
             <p className="text-sm text-muted-foreground">Pedidos em tempo real</p>
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex flex-wrap gap-2 overflow-x-auto no-scrollbar">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const name = await connectKitchenPrinter();
+                  setPrinterName(name);
+                  toast.success(`Impressora: ${name}`);
+                } catch (error) {
+                  toast.error(friendlyError(error, "Não foi possível conectar a impressora."));
+                }
+              }}
+            >
+              {printerName ? printerName : "Bluetooth"}
+            </Button>
+            <Button variant={autoPrint ? "default" : "outline"} size="sm" onClick={() => setAutoPrint((v) => !v)}>
+              Auto-print {autoPrint ? "on" : "off"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!user) return;
+                try {
+                  await enablePushNotifications(user.organization.id, user.profile.id);
+                  toast.success("Push da cozinha ativado.");
+                } catch (error) {
+                  toast.error(friendlyError(error, "Não foi possível ativar o push."));
+                }
+              }}
+            >
+              Ativar push
+            </Button>
             <Button variant={sectorId === "all" ? "default" : "outline"} size="sm" onClick={() => setSectorId("all")}>
               Todos
             </Button>
@@ -107,6 +163,14 @@ export default function KitchenPage() {
                         key={ticket.id}
                         ticket={ticket}
                         onAdvance={() => advance(ticket.id, ticket.status, ticket.order_id)}
+                        onPrint={async () => {
+                          try {
+                            await printKitchenTicket(ticket as KitchenTicket);
+                            toast.success("Ticket enviado à impressora.");
+                          } catch (error) {
+                            toast.error(friendlyError(error, "Falha na impressão Bluetooth."));
+                          }
+                        }}
                       />
                     ))
                   )}

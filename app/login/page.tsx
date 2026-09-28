@@ -58,11 +58,19 @@ export default function LoginPage() {
             <Button className="w-full" type="submit" disabled={submitting}>
               {submitting ? "Entrando..." : "Entrar"}
             </Button>
-            <div className="text-center text-sm">
+            <div className="flex items-center justify-between text-sm">
               <Link href="/forgot-password/" className="text-primary hover:underline">
                 Esqueci minha senha
               </Link>
+              <Link href="/signup/" className="text-primary hover:underline">
+                Criar restaurante
+              </Link>
             </div>
+            <p className="text-center text-xs text-muted-foreground">
+              <Link href="/" className="hover:underline">
+                Voltar à página inicial
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>

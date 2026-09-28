@@ -18,6 +18,7 @@ const LINKS = [
   { href: "/admin/vendas", label: "Vendas" },
   { href: "/admin/relatorios", label: "Relatórios" },
   { href: "/admin/configuracoes", label: "Configurações" },
+  { href: "/admin/assinatura", label: "Assinatura" },
 ];
 
 export function AdminNav() {

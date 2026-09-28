@@ -21,6 +21,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   refresh: () => Promise<void>;
   homePath: string;
 }
@@ -123,7 +124,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setSession(nextSession);
+        setLoading(false);
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/reset-password")) {
+          window.location.replace(`${window.location.origin}/reset-password/`);
+        }
+        return;
+      }
       setSession(nextSession);
       if (!nextSession?.user) {
         setUser(null);
@@ -161,16 +170,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = useCallback(async (email: string) => {
     const supabase = getSupabase();
-    const redirectTo = `${window.location.origin}/login/`;
+    const redirectTo = `${window.location.origin}/reset-password/`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw error;
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
   }, []);
 
   const homePath = user ? ROLE_HOME[user.profile.primary_role] : "/login";
 
   const value = useMemo(
-    () => ({ loading, session, user, signIn, signOut, resetPassword, refresh, homePath }),
-    [loading, session, user, signIn, signOut, resetPassword, refresh, homePath],
+    () => ({
+      loading,
+      session,
+      user,
+      signIn,
+      signOut,
+      resetPassword,
+      updatePassword,
+      refresh,
+      homePath,
+    }),
+    [loading, session, user, signIn, signOut, resetPassword, updatePassword, refresh, homePath],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

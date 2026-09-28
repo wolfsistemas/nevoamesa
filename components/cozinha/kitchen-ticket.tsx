@@ -7,9 +7,11 @@ import type { KitchenTicket } from "@/types";
 export function KitchenTicketCard({
   ticket,
   onAdvance,
+  onPrint,
 }: {
   ticket: KitchenTicket;
   onAdvance: () => void;
+  onPrint?: () => void;
 }) {
   const order = ticket.order;
   const late = Date.now() - new Date(ticket.created_at).getTime() > 12 * 60 * 1000;
@@ -45,9 +47,16 @@ export function KitchenTicketCard({
         <span>{order?.waiter?.full_name ?? "Garçom"}</span>
         <span>{formatTime(ticket.created_at)}</span>
       </div>
-      <Button className="mt-4 w-full" onClick={onAdvance}>
-        {ticket.status === "NEW" ? "Iniciar preparo" : ticket.status === "PREPARING" ? "Marcar como pronto" : "Entregue"}
-      </Button>
+      <div className="mt-4 flex gap-2">
+        {onPrint ? (
+          <Button variant="outline" className="flex-1" onClick={onPrint}>
+            Imprimir
+          </Button>
+        ) : null}
+        <Button className="flex-1" onClick={onAdvance}>
+          {ticket.status === "NEW" ? "Iniciar preparo" : ticket.status === "PREPARING" ? "Marcar como pronto" : "Entregue"}
+        </Button>
+      </div>
     </div>
   );
 }

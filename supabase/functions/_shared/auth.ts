@@ -7,6 +7,7 @@ export type Profile = {
   primary_role: string;
   active: boolean;
   full_name: string;
+  email?: string | null;
 };
 
 export async function requireUser(req: Request) {

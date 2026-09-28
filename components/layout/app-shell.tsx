@@ -19,6 +19,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useOnline } from "@/hooks/use-online";
+import { PushPrompt } from "@/hooks/use-push";
 import { APP_NAME, ROLE_LABEL } from "@/lib/constants";
 import { canOperateCash, canOperateKitchen, canOperateWaiter, canViewReports } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,11 @@ const NAV = [
   { href: "/caixa", label: "Caixa", icon: Wallet, check: canOperateCash },
   { href: "/admin/produtos", label: "Admin", icon: Settings, check: canViewReports },
 ];
+
+function isNavActive(pathname: string, href: string) {
+  if (href === "/admin/produtos") return pathname.startsWith("/admin");
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { loading, user, signOut } = useAuth();
@@ -83,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <nav className="flex flex-1 flex-col gap-1">
             {items.map((item) => {
               const Icon = item.icon;
-              const active = pathname.startsWith(item.href);
+              const active = isNavActive(pathname, item.href);
               return (
                 <Link
                   key={item.href}
@@ -155,11 +161,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           ) : null}
-          <main className="flex-1 p-4 pb-24 lg:p-6">{children}</main>
-          <nav className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 border-t border-border bg-surface/95 backdrop-blur lg:hidden">
-            {items.slice(0, 4).map((item) => {
+          <main className="flex-1 p-4 pb-28 lg:p-6">{children}</main>
+          <PushPrompt />
+          <nav
+            className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+            style={{ gridTemplateColumns: `repeat(${Math.max(items.length, 1)}, minmax(0, 1fr))` }}
+          >
+            {items.map((item) => {
               const Icon = item.icon;
-              const active = pathname.startsWith(item.href);
+              const active = isNavActive(pathname, item.href);
               return (
                 <Link
                   key={item.href}

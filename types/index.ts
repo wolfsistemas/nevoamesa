@@ -328,6 +328,77 @@ export interface CartItem {
   addons: CartAddon[];
 }
 
+export interface Plan {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  currency: string;
+  interval: string;
+  max_users: number | null;
+  max_tables: number | null;
+  highlighted: boolean;
+  sort_order: number;
+  features: string[];
+  mp_preapproval_plan_id: string | null;
+  active: boolean;
+}
+
+export interface Subscription {
+  id: string;
+  organization_id: string;
+  plan_id: string | null;
+  status: string;
+  billing_email: string | null;
+  mp_preapproval_id: string | null;
+  mp_plan_id: string | null;
+  mp_status: string | null;
+  provider: string;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+  canceled_at: string | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  updated_at: string;
+  plan?: Plan | null;
+}
+
+export interface PushSubscriptionRow {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent: string | null;
+  created_at: string;
+}
+
+export interface AppNotification {
+  id: string;
+  organization_id: string;
+  user_id: string | null;
+  title: string;
+  body: string;
+  type: string;
+  entity: string | null;
+  entity_id: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface PrinterStation {
+  id: string;
+  organization_id: string;
+  name: string;
+  sector_id: string | null;
+  connection_type: string;
+  device_name: string | null;
+  active: boolean;
+  created_at: string;
+}
+
 export interface DashboardMetrics {
   sales_total: number;
   orders_count: number;

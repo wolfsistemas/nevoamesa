@@ -232,7 +232,7 @@ function ComandaPageInner() {
         <div className="text-xl font-bold text-primary">{formatCurrency(currentTotal)}</div>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-4 hidden flex-wrap gap-2 lg:flex">
         <Button onClick={sendOrder} disabled={sending}>
           {sending ? "Enviando..." : "Enviar pedido"}
         </Button>
@@ -269,7 +269,7 @@ function ComandaPageInner() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid gap-6 pb-28 lg:grid-cols-[1fr_340px] lg:pb-0">
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} onAdd={() => openAdd(product)} />
@@ -331,6 +331,21 @@ function ComandaPageInner() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-16 z-20 border-t border-border bg-surface/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] backdrop-blur lg:hidden">
+        <div className="mb-2 flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{cart.length} item(ns)</span>
+          <span className="font-semibold text-primary">{formatCurrency(currentTotal)}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button onClick={sendOrder} disabled={sending}>
+            {sending ? "Enviando..." : "Enviar"}
+          </Button>
+          <Button variant="secondary" onClick={handleBill} disabled={!attendance}>
+            Fechar conta
+          </Button>
         </div>
       </div>
 

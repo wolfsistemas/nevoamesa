@@ -35,3 +35,13 @@ verify_jwt = true
 verify_jwt = true
 [functions.create-user]
 verify_jwt = true
+[functions.signup-tenant]
+verify_jwt = false
+[functions.create-subscription]
+verify_jwt = true
+[functions.cancel-subscription]
+verify_jwt = true
+[functions.mp-webhook]
+verify_jwt = false
+[functions.send-push]
+verify_jwt = true

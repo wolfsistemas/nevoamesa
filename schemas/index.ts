@@ -9,6 +9,31 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email("Informe um e-mail válido"),
 });
 
+export const resetPasswordSchema = z
+  .object({
+    password: z.string().min(6, "Senha deve ter ao menos 6 caracteres"),
+    confirm: z.string().min(6, "Confirme a senha"),
+  })
+  .refine((data) => data.password === data.confirm, {
+    message: "As senhas não coincidem",
+    path: ["confirm"],
+  });
+
+export const signupSchema = z.object({
+  restaurant_name: z.string().min(2, "Informe o nome do restaurante"),
+  full_name: z.string().min(2, "Informe o seu nome"),
+  email: z.string().email("Informe um e-mail válido"),
+  password: z.string().min(6, "Senha deve ter ao menos 6 caracteres"),
+  phone: z.string().optional(),
+  plan_code: z.enum(["FREE", "BASIC", "PRO", "ENTERPRISE"]),
+  accept_terms: z.boolean().refine((value) => value === true, {
+    message: "Aceite os Termos de Uso",
+  }),
+  accept_privacy: z.boolean().refine((value) => value === true, {
+    message: "Aceite a Política de Privacidade",
+  }),
+});
+
 export const productSchema = z.object({
   name: z.string().min(2, "Nome obrigatório"),
   description: z.string().optional().nullable(),
@@ -110,5 +135,6 @@ export const addonGroupSchema = z.object({
 });
 
 export type LoginValues = z.infer<typeof loginSchema>;
+export type SignupValues = z.infer<typeof signupSchema>;
 export type ProductValues = z.infer<typeof productSchema>;
 export type CloseSaleValues = z.infer<typeof closeSaleSchema>;

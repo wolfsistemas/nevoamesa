@@ -15,6 +15,24 @@ Deno.serve(
       throw new Error("Função inválida.");
     }
 
+    const { data: sub } = await admin
+      .from("subscriptions")
+      .select("plan:plans(max_users)")
+      .eq("organization_id", profile.organization_id)
+      .maybeSingle();
+    const plan = Array.isArray(sub?.plan) ? sub?.plan[0] : sub?.plan;
+    const maxUsers = (plan as { max_users?: number | null } | null)?.max_users;
+    if (maxUsers) {
+      const { count } = await admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", profile.organization_id)
+        .eq("active", true);
+      if ((count ?? 0) >= maxUsers) {
+        throw new Error("Limite de usuários do plano atingido. Faça upgrade em Assinatura.");
+      }
+    }
+
     const { data, error } = await admin.auth.admin.createUser({
       email,
       password,

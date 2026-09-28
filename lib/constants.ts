@@ -48,3 +48,72 @@ export const ADMIN_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER"];
 export const CASH_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER", "CASHIER"];
 export const WAITER_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER", "WAITER"];
 export const KITCHEN_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER", "KITCHEN"];
+
+export const VAPID_PUBLIC_KEY =
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+  "BD5NPmfHXM91zUFSrvuT4UIJD61j1qPwWIbV0x3gfVvW_qAJmsdtvYaL8sJ555l8_UWmmlwH0yZznXKvIIukVjk";
+
+export const LEGAL_VERSION = "2026-09";
+
+export const FALLBACK_PLANS = [
+  {
+    code: "FREE",
+    name: "Free",
+    description: "Para testar o salão com um time pequeno.",
+    price_cents: 0,
+    max_users: 3,
+    max_tables: 8,
+    highlighted: false,
+    features: ["Até 3 usuários", "Até 8 mesas", "KDS em tempo real", "Caixa básico", "Suporte por e-mail"],
+  },
+  {
+    code: "BASIC",
+    name: "Basic",
+    description: "Operação diária de bares e restaurantes pequenos.",
+    price_cents: 9900,
+    max_users: 8,
+    max_tables: 20,
+    highlighted: false,
+    features: [
+      "Até 8 usuários",
+      "Até 20 mesas",
+      "Garçom, cozinha e caixa",
+      "Impressão Bluetooth",
+      "Notificações push",
+      "14 dias de trial",
+    ],
+  },
+  {
+    code: "PRO",
+    name: "Pro",
+    description: "O plano completo para o salão crescer com controle.",
+    price_cents: 19900,
+    max_users: null as number | null,
+    max_tables: null as number | null,
+    highlighted: true,
+    features: [
+      "Usuários e mesas ilimitados",
+      "Relatórios e auditoria",
+      "Estoque e adicionais",
+      "Push + KDS + Bluetooth",
+      "Assinatura Mercado Pago",
+      "Prioridade no suporte",
+    ],
+  },
+  {
+    code: "ENTERPRISE",
+    name: "Enterprise",
+    description: "Redes, múltiplas unidades e operação sob medida.",
+    price_cents: 0,
+    max_users: null as number | null,
+    max_tables: null as number | null,
+    highlighted: false,
+    features: [
+      "Multi-unidades",
+      "SLA dedicado",
+      "Onboarding assistido",
+      "Integrações sob demanda",
+      "Contrato personalizado",
+    ],
+  },
+];

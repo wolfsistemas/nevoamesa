@@ -71,7 +71,7 @@ O seed de demonstração (restaurante, mesas, produtos e usuários) é aplicado 
 
 - Provider: e-mail + senha
 - Confirme o Site URL e Redirect URLs no painel (Auth > URL Configuration)
-- Recuperação de senha usa `/login/`
+- Recuperação de senha usa `/reset-password/`
 
 ### 5. Realtime
 
@@ -103,6 +103,17 @@ Funções em `supabase/functions`:
 - `split-payment`
 - `inventory-movement`
 - `create-user`
+- `signup-tenant` (JWT desligado)
+- `create-subscription`
+- `cancel-subscription`
+- `mp-webhook` (JWT desligado)
+- `send-push`
+
+Secrets extras das functions:
+
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `MP_ACCESS_TOKEN` (opcional até a cobrança real)
 
 Publicar:
 
@@ -166,3 +177,16 @@ Secrets necessários no repositório:
 ## PWA
 
 O app instala como RestaurantOS (Android, iPhone, tablet e desktop), com manifest e service worker.
+
+## Landing, planos e LGPD
+
+- Home pública em `/` com recursos e planos
+- Cadastro self-serve em `/signup/` (cria organization + OWNER)
+- Termos em `/termos/` e privacidade LGPD em `/privacidade/`
+- Assinatura e cancelamento em `/admin/assinatura/`
+- Mercado Pago Assinatura fica pré-vinculado; sem `MP_ACCESS_TOKEN` o plano entra em trial
+
+## Push e impressão
+
+- Web Push (VAPID) para novos tickets da cozinha
+- Impressão Bluetooth ESC/POS na tela `/cozinha/`

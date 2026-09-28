@@ -1,5 +1,6 @@
 import { audit, assertRole, handle, requireUser } from "../_shared/auth.ts";
 import { json } from "../_shared/cors.ts";
+import { notifyKitchen } from "../_shared/push.ts";
 
 type ItemInput = {
   product_id: string;
@@ -175,6 +176,13 @@ Deno.serve(
       .eq("id", attendanceId);
 
     await audit(admin, orgId, profile.id, "create", "order", order.id, { number, tableId });
+    await notifyKitchen(
+      admin,
+      orgId,
+      `Pedido #${number}`,
+      `Mesa ${table.number} — novo ticket na cozinha.`,
+      order.id,
+    );
     return json({ order, attendance_id: attendanceId });
   }),
 );

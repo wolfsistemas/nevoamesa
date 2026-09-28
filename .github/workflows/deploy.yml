@@ -29,6 +29,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dHZyeHlmbXdpb3luY3JsdXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MDA5NTQsImV4cCI6MjEwNjE3Njk1NH0._1jn103xP8WikvMvjjAOuLta4zoItSMIn1H0lgwTr0Q
           NEXT_PUBLIC_BASE_PATH: /nevoamesa
           NEXT_PUBLIC_APP_NAME: RestaurantOS
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: BD5NPmfHXM91zUFSrvuT4UIJD61j1qPwWIbV0x3gfVvW_qAJmsdtvYaL8sJ555l8_UWmmlwH0yZznXKvIIukVjk
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out

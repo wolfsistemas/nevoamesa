@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
+import { enablePushNotifications, disablePushNotifications } from "@/lib/push";
 import { getSupabase } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/utils";
 
@@ -99,6 +100,45 @@ export default function SettingsPage() {
             />
           </div>
           <Button onClick={save}>Salvar</Button>
+        </CardContent>
+      </Card>
+      <Card className="mt-4 max-w-xl">
+        <CardHeader>
+          <CardTitle>Notificações e impressão</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Ative o push para avisos da cozinha. A impressão Bluetooth é conectada na tela da cozinha.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!user) return;
+                try {
+                  await enablePushNotifications(user.organization.id, user.profile.id);
+                  toast.success("Notificações ativadas.");
+                } catch (error) {
+                  toast.error(friendlyError(error, "Não foi possível ativar o push."));
+                }
+              }}
+            >
+              Ativar push
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await disablePushNotifications();
+                  toast.success("Notificações desativadas.");
+                } catch (error) {
+                  toast.error(friendlyError(error));
+                }
+              }}
+            >
+              Desativar push
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </AppShell>

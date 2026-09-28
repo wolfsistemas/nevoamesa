@@ -51,14 +51,14 @@ export default function CashPage() {
             Status: {register ? "Aberto" : "Fechado"}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" className="flex-1 sm:flex-none">
             <Link href="/caixa/abertura/">Abertura</Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="flex-1 sm:flex-none">
             <Link href="/caixa/movimentacoes/">Movimentações</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="flex-1 sm:flex-none">
             <Link href="/caixa/fechamento/">Fechamento</Link>
           </Button>
         </div>
