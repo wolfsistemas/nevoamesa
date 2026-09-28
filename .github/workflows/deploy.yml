@@ -1,0 +1,44 @@
+name: Deploy frontend
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://rwtvrxyfmwioyncrluvn.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dHZyeHlmbXdpb3luY3JsdXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MDA5NTQsImV4cCI6MjEwNjE3Njk1NH0._1jn103xP8WikvMvjjAOuLta4zoItSMIn1H0lgwTr0Q
+          NEXT_PUBLIC_BASE_PATH: /nevoamesa
+          NEXT_PUBLIC_APP_NAME: RestaurantOS
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --background: #f6f7f9;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --primary: #f59e0b;
+  --primary-dark: #d97706;
+  --primary-foreground: #111827;
+  --foreground: #0f172a;
+  --muted: #e2e8f0;
+  --muted-foreground: #64748b;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --accent: #f1f5f9;
+  --sidebar: #ffffff;
+  --table-free: #22c55e;
+  --table-occupied: #f59e0b;
+  --table-payment: #3b82f6;
+  --table-reserved: #a855f7;
+  --table-unavailable: #64748b;
+}
+
+.dark {
+  --background: #0b0d10;
+  --surface: #12161c;
+  --border: #242a33;
+  --primary: #f59e0b;
+  --primary-dark: #d97706;
+  --primary-foreground: #0b0d10;
+  --foreground: #f8fafc;
+  --muted: #1c222b;
+  --muted-foreground: #94a3b8;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --accent: #1a2028;
+  --sidebar: #0e1116;
+  --table-free: #22c55e;
+  --table-occupied: #f59e0b;
+  --table-payment: #3b82f6;
+  --table-reserved: #a855f7;
+  --table-unavailable: #64748b;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    min-height: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@media print {
+  nav,
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .print-area {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

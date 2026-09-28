@@ -1,0 +1,37 @@
+project_id = "rwtvrxyfmwioyncrluvn"
+
+[api]
+enabled = true
+
+[db]
+major_version = 17
+
+[realtime]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+
+[functions.create-order]
+verify_jwt = true
+[functions.close-sale]
+verify_jwt = true
+[functions.process-payment]
+verify_jwt = true
+[functions.open-cash-register]
+verify_jwt = true
+[functions.close-cash-register]
+verify_jwt = true
+[functions.cash-movement]
+verify_jwt = true
+[functions.cancel-order]
+verify_jwt = true
+[functions.transfer-table]
+verify_jwt = true
+[functions.split-payment]
+verify_jwt = true
+[functions.inventory-movement]
+verify_jwt = true
+[functions.create-user]
+verify_jwt = true

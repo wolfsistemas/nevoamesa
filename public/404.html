@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>RestaurantOS</title>
+    <script>
+      const path = location.pathname.replace(/\/index\.html$/, "/");
+      sessionStorage.setItem("restaurantos-redirect", path + location.search + location.hash);
+      const parts = location.pathname.split("/").filter(Boolean);
+      const base = parts[0] === "nevoamesa" ? "/nevoamesa/" : "/";
+      location.replace(base);
+    </script>
+  </head>
+  <body></body>
+</html>
