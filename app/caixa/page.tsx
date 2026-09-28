@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, LoadingState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/use-auth";
 import { useRealtimeTable } from "@/hooks/use-realtime";
+import { ORDER_STATUS_CLASS, ORDER_STATUS_LABEL } from "@/lib/constants";
+import { aggregateOrderStatus } from "@/lib/orders";
 import { getOpenCashRegister, listCashMovements, listWaitingAttendances } from "@/services/operations";
 import { formatCurrency } from "@/lib/utils";
 
@@ -24,6 +26,7 @@ export default function CashPage() {
 
   useRealtimeTable("cash_registers", orgId, refresh);
   useRealtimeTable("attendances", orgId, refresh);
+  useRealtimeTable("orders", orgId, refresh);
   useRealtimeTable("sales", orgId, refresh);
 
   const { data: register, isLoading } = useQuery({
@@ -53,6 +56,9 @@ export default function CashPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" className="flex-1 sm:flex-none">
+            <Link href="/garcom/">Mesas</Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1 sm:flex-none">
             <Link href="/caixa/abertura/">Abertura</Link>
           </Button>
           <Button asChild variant="outline" className="flex-1 sm:flex-none">
@@ -78,19 +84,31 @@ export default function CashPage() {
               {(waiting ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma mesa aguardando.</p>
               ) : (
-                (waiting ?? []).map((att) => (
-                  <Link
-                    key={att.id}
-                    href={`/caixa/fechamento/?attendance=${att.id}`}
-                    className="flex items-center justify-between rounded-lg border border-border p-3 hover:border-primary"
-                  >
-                    <div>
-                      <div className="font-medium">Mesa {att.table?.number}</div>
-                      <div className="text-xs text-muted-foreground">{att.status}</div>
-                    </div>
-                    <div className="font-semibold text-primary">{formatCurrency(att.total || att.subtotal)}</div>
-                  </Link>
-                ))
+                (waiting ?? []).map((att) => {
+                  const status = aggregateOrderStatus(att.orders);
+                  return (
+                    <Link
+                      key={att.id}
+                      href={`/caixa/fechamento/?attendance=${att.id}`}
+                      className="flex items-center justify-between rounded-lg border border-border p-3 hover:border-primary"
+                    >
+                      <div>
+                        <div className="font-medium">
+                          {att.table ? `Mesa ${att.table.number}` : att.customer_name ?? "Balcão"}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{att.status}</span>
+                          {status ? (
+                            <span className={`rounded-full border px-2 py-0.5 font-semibold ${ORDER_STATUS_CLASS[status]}`}>
+                              {ORDER_STATUS_LABEL[status]}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="font-semibold text-primary">{formatCurrency(att.total || att.subtotal)}</div>
+                    </Link>
+                  );
+                })
               )}
             </CardContent>
           </Card>

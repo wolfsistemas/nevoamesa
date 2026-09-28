@@ -77,7 +77,8 @@ Deno.serve(
 
     const discount = Math.max(0, Number(body.discount_amount) || 0);
     const serviceFee = Math.max(0, Number(body.service_fee) || 0);
-    const total = Math.max(0, subtotal - Math.min(discount, subtotal) + serviceFee);
+    const deliveryFee = Math.max(0, Number(attendance.delivery_fee) || 0);
+    const total = Math.max(0, subtotal - Math.min(discount, subtotal) + serviceFee + deliveryFee);
     const paid = payments.reduce((acc, p) => acc + Number(p.amount), 0);
     if (Math.abs(paid - total) > 0.05) {
       throw new Error(`O valor pago (R$ ${paid.toFixed(2)}) não confere com o total (R$ ${total.toFixed(2)}).`);
@@ -148,7 +149,9 @@ Deno.serve(
       .eq("id", attendanceId)
       .neq("status", "CLOSED");
 
-    await admin.from("tables").update({ status: "FREE" }).eq("id", attendance.table_id);
+    if (attendance.table_id) {
+      await admin.from("tables").update({ status: "FREE" }).eq("id", attendance.table_id);
+    }
     await admin
       .from("orders")
       .update({ status: "DELIVERED" })

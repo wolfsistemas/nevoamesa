@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/app-shell";
 import { AdminNav } from "@/components/admin/admin-nav";
@@ -16,6 +16,7 @@ import { friendlyError } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { user, refresh } = useAuth();
+  const [menuUrl, setMenuUrl] = useState("");
   const [form, setForm] = useState({
     name: user?.organization.name ?? "",
     phone: user?.organization.phone ?? "",
@@ -25,6 +26,12 @@ export default function SettingsPage() {
     allow_discount: user?.settings.allow_discount ?? true,
     allow_negative_stock: user?.settings.allow_negative_stock ?? false,
   });
+
+  useEffect(() => {
+    if (!user) return;
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    setMenuUrl(`${window.location.origin}${base}/cardapio/?slug=${user.organization.slug}`);
+  }, [user]);
 
   async function save() {
     if (!user) return;
@@ -100,6 +107,40 @@ export default function SettingsPage() {
             />
           </div>
           <Button onClick={save}>Salvar</Button>
+        </CardContent>
+      </Card>
+      <Card className="mt-4 max-w-xl">
+        <CardHeader>
+          <CardTitle>Cardápio online</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Compartilhe este link com seus clientes para receberem pedidos de retirada ou entrega.
+          </p>
+          <div className="space-y-1">
+            <Label>Link público</Label>
+            <Input readOnly value={menuUrl} />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(menuUrl);
+                  toast.success("Link copiado.");
+                } catch (error) {
+                  toast.error(friendlyError(error, "Não foi possível copiar."));
+                }
+              }}
+            >
+              Copiar link
+            </Button>
+            <Button variant="outline" asChild>
+              <a href={menuUrl} target="_blank" rel="noopener noreferrer">
+                Abrir cardápio
+              </a>
+            </Button>
+          </div>
         </CardContent>
       </Card>
       <Card className="mt-4 max-w-xl">

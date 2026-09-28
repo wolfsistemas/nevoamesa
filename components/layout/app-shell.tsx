@@ -15,6 +15,8 @@ import {
   WifiOff,
   Menu,
   UserRound,
+  ShoppingBag,
+  ShieldCheck,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -22,7 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useOnline } from "@/hooks/use-online";
 import { PushPrompt } from "@/hooks/use-push";
 import { APP_NAME, ROLE_LABEL } from "@/lib/constants";
-import { canOperateCash, canOperateKitchen, canOperateWaiter, canViewReports } from "@/lib/permissions";
+import { canOperateCash, canOperateKitchen, canOperateWaiter, canViewReports, isSuperadmin } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,9 +36,10 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, check: canViewReports },
-  { href: "/garcom", label: "Garçom", icon: UtensilsCrossed, check: canOperateWaiter },
+  { href: "/garcom", label: "Mesas", icon: UtensilsCrossed, check: canOperateWaiter },
   { href: "/cozinha", label: "Cozinha", icon: ChefHat, check: canOperateKitchen },
   { href: "/caixa", label: "Caixa", icon: Wallet, check: canOperateCash },
+  { href: "/encomendas", label: "Encomendas", icon: ShoppingBag, check: canOperateWaiter },
   { href: "/admin/produtos", label: "Admin", icon: Settings, check: canViewReports },
 ];
 
@@ -74,10 +77,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!loading && !user) router.replace("/login/");
   }, [loading, user, router]);
 
-  const items = useMemo(
-    () => (user ? NAV.filter((item) => item.check(user.roles)) : []),
-    [user],
-  );
+  const items = useMemo(() => {
+    if (!user) return [];
+    const base = NAV.filter((item) => item.check(user.roles));
+    if (isSuperadmin(user.profile)) {
+      base.push({ href: "/superadmin", label: "Superadmin", icon: ShieldCheck, check: () => true });
+    }
+    return base;
+  }, [user]);
 
   if (loading || !user) {
     return (

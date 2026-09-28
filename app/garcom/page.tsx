@@ -8,6 +8,7 @@ import { TableCard } from "@/components/garcom/table-card";
 import { EmptyState, LoadingState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/use-auth";
 import { useRealtimeTable } from "@/hooks/use-realtime";
+import { aggregateOrderStatus } from "@/lib/orders";
 import { listTables, listWaitingAttendances } from "@/services/operations";
 
 export default function WaiterHomePage() {
@@ -57,6 +58,7 @@ export default function WaiterHomePage() {
                 key={table.id}
                 table={table}
                 attendance={attendance}
+                orderStatus={aggregateOrderStatus(attendance?.orders)}
                 onClick={() => router.push(`/garcom/comanda/?id=${table.id}`)}
               />
             );

@@ -23,6 +23,7 @@ import {
   transferTable,
 } from "@/services/operations";
 import { useHotkeys } from "@/hooks/use-hotkeys";
+import { ORDER_STATUS_CLASS, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { formatCurrency, friendlyError } from "@/lib/utils";
 import type { CartAddon, CartItem, Product } from "@/types";
 
@@ -319,7 +320,9 @@ function ComandaPageInner() {
                   <div key={order.id} className="rounded-lg border border-border p-3">
                     <div className="mb-2 flex justify-between">
                       <span className="font-medium">Pedido #{order.number}</span>
-                      <span className="text-primary">{order.status}</span>
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${ORDER_STATUS_CLASS[order.status]}`}>
+                        {ORDER_STATUS_LABEL[order.status]}
+                      </span>
                     </div>
                     {(order.items ?? []).map((item) => (
                       <div key={item.id}>

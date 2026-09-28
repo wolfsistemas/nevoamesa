@@ -1,16 +1,18 @@
 "use client";
 
-import { TABLE_STATUS_CLASS, TABLE_STATUS_LABEL } from "@/lib/constants";
+import { ORDER_STATUS_CLASS, ORDER_STATUS_LABEL, TABLE_STATUS_CLASS, TABLE_STATUS_LABEL } from "@/lib/constants";
 import { elapsedLabel, formatCurrency } from "@/lib/utils";
-import type { Attendance, DiningTable } from "@/types";
+import type { Attendance, DiningTable, OrderStatus } from "@/types";
 
 export function TableCard({
   table,
   attendance,
+  orderStatus,
   onClick,
 }: {
   table: DiningTable;
   attendance?: Attendance | null;
+  orderStatus?: OrderStatus | null;
   onClick: () => void;
 }) {
   return (
@@ -31,6 +33,11 @@ export function TableCard({
         <div className="font-semibold">
           {attendance ? formatCurrency(attendance.total || attendance.subtotal) : "R$ 0,00"}
         </div>
+        {orderStatus ? (
+          <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold ${ORDER_STATUS_CLASS[orderStatus]}`}>
+            {ORDER_STATUS_LABEL[orderStatus]}
+          </span>
+        ) : null}
         <div className="opacity-80">
           {attendance ? elapsedLabel(attendance.opened_at) : "Disponível"}
         </div>

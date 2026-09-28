@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { CHANNEL_LABEL } from "@/lib/constants";
 import { elapsedLabel, formatTime } from "@/lib/utils";
 import type { KitchenTicket } from "@/types";
 
@@ -14,6 +15,12 @@ export function KitchenTicketCard({
   onPrint?: () => void;
 }) {
   const order = ticket.order;
+  const channel = order?.attendance?.channel;
+  const origin = order?.table
+    ? `Mesa ${order.table.number}`
+    : channel
+      ? `${CHANNEL_LABEL[channel]}${order?.attendance?.customer_name ? ` — ${order.attendance.customer_name}` : ""}`
+      : "—";
   const late = Date.now() - new Date(ticket.created_at).getTime() > 12 * 60 * 1000;
   return (
     <div
@@ -21,7 +28,7 @@ export function KitchenTicketCard({
     >
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-lg font-bold">Mesa {order?.table?.number ?? "—"}</div>
+          <div className="text-lg font-bold">{origin}</div>
           <div className="text-xs text-muted-foreground">Pedido #{order?.number}</div>
         </div>
         <div className={`text-sm font-semibold ${late ? "text-danger" : "text-primary"}`}>

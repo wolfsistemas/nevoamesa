@@ -1,4 +1,4 @@
-import type { PaymentMethod, TableStatus, UserRole } from "@/types";
+import type { DeliveryStatus, OrderChannel, OrderStatus, PaymentMethod, TableStatus, UserRole } from "@/types";
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "RestaurantOS";
 
@@ -44,9 +44,50 @@ export const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   OTHER: "Outros",
 };
 
+export const CHANNEL_LABEL: Record<OrderChannel, string> = {
+  SALAO: "Salão",
+  BALCAO: "Balcão",
+  DELIVERY: "Delivery",
+  WHATSAPP: "WhatsApp",
+  ENCOMENDA: "Encomenda",
+  ONLINE: "Cardápio online",
+};
+
+export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  PENDING: "Pendente",
+  SENT: "Enviado",
+  PREPARING: "Em preparo",
+  READY: "Pronto",
+  DELIVERED: "Entregue",
+  CANCELLED: "Cancelado",
+};
+
+export const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
+  PENDING: "border-slate-500/40 bg-slate-500/10 text-slate-400",
+  SENT: "border-sky-500/40 bg-sky-500/10 text-sky-400",
+  PREPARING: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  READY: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  DELIVERED: "border-primary/40 bg-primary/10 text-primary",
+  CANCELLED: "border-danger/40 bg-danger/10 text-danger",
+};
+
+export const DELIVERY_STATUS_LABEL: Record<DeliveryStatus, string> = {
+  PENDING: "Aguardando preparo",
+  OUT_FOR_DELIVERY: "Saiu para entrega",
+  DELIVERED: "Entregue",
+  CANCELLED: "Cancelado",
+};
+
+export const DELIVERY_STATUS_CLASS: Record<DeliveryStatus, string> = {
+  PENDING: "border-sky-500/40 bg-sky-500/10 text-sky-400",
+  OUT_FOR_DELIVERY: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  DELIVERED: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  CANCELLED: "border-danger/40 bg-danger/10 text-danger",
+};
+
 export const ADMIN_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER"];
 export const CASH_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER", "CASHIER"];
-export const WAITER_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER", "WAITER"];
+export const WAITER_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER", "WAITER", "CASHIER"];
 export const KITCHEN_ROLES: UserRole[] = ["OWNER", "ADMIN", "MANAGER", "KITCHEN"];
 
 export const VAPID_PUBLIC_KEY =

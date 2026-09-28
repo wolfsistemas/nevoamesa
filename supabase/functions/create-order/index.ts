@@ -9,24 +9,42 @@ type ItemInput = {
   addons?: Array<{ name: string; price: number }>;
 };
 
+const CHANNELS = ["SALAO", "BALCAO", "DELIVERY", "WHATSAPP", "ENCOMENDA", "ONLINE"];
+const CHANNEL_LABEL: Record<string, string> = {
+  SALAO: "Salão",
+  BALCAO: "Balcão",
+  DELIVERY: "Delivery",
+  WHATSAPP: "WhatsApp",
+  ENCOMENDA: "Encomenda",
+  ONLINE: "Cardápio online",
+};
+
 Deno.serve(
   handle(async (req) => {
     const { profile, roles, admin } = await requireUser(req);
-    assertRole(roles, ["OWNER", "ADMIN", "MANAGER", "WAITER"]);
+    assertRole(roles, ["OWNER", "ADMIN", "MANAGER", "WAITER", "CASHIER"]);
     const body = await req.json();
-    const tableId = String(body.table_id ?? "");
+    const channel = String(body.channel ?? "SALAO").toUpperCase();
+    if (!CHANNELS.includes(channel)) throw new Error("Canal de pedido inválido.");
+    const tableId = body.table_id ? String(body.table_id) : null;
     const items = (body.items ?? []) as ItemInput[];
-    if (!tableId || !items.length) throw new Error("Informe a mesa e ao menos um item.");
+    if (!items.length) throw new Error("Informe ao menos um item.");
+    if (channel === "SALAO" && !tableId) throw new Error("Informe a mesa para pedidos de salão.");
 
     const orgId = profile.organization_id;
-    const { data: table, error: tableError } = await admin
-      .from("tables")
-      .select("*")
-      .eq("id", tableId)
-      .eq("organization_id", orgId)
-      .single();
-    if (tableError || !table) throw new Error("Mesa não encontrada.");
-    if (table.status === "UNAVAILABLE") throw new Error("Mesa indisponível.");
+    let tableNumber: number | null = null;
+
+    if (channel === "SALAO" && tableId) {
+      const { data: table, error: tableError } = await admin
+        .from("tables")
+        .select("*")
+        .eq("id", tableId)
+        .eq("organization_id", orgId)
+        .single();
+      if (tableError || !table) throw new Error("Mesa não encontrada.");
+      if (table.status === "UNAVAILABLE") throw new Error("Mesa indisponível.");
+      tableNumber = table.number;
+    }
 
     let attendanceId = body.attendance_id as string | undefined;
     if (attendanceId) {
@@ -39,28 +57,41 @@ Deno.serve(
       if (!existing || existing.status === "CLOSED" || existing.status === "CANCELLED") {
         throw new Error("Este atendimento já foi finalizado.");
       }
-    } else {
+    } else if (channel === "SALAO" && tableId) {
       const { data: open } = await admin
         .from("attendances")
         .select("id")
         .eq("table_id", tableId)
         .in("status", ["OPEN", "WAITING_PAYMENT"])
+        .order("opened_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (open) attendanceId = open.id;
-      else {
-        const { data: created, error } = await admin
-          .from("attendances")
-          .insert({
-            organization_id: orgId,
-            table_id: tableId,
-            waiter_id: profile.id,
-            status: "OPEN",
-          })
-          .select("id")
-          .single();
-        if (error || !created) throw new Error("Não foi possível abrir o atendimento.");
-        attendanceId = created.id;
-      }
+    }
+
+    if (!attendanceId) {
+      const deliveryStatus = channel === "DELIVERY" ? "PENDING" : null;
+      const { data: created, error } = await admin
+        .from("attendances")
+        .insert({
+          organization_id: orgId,
+          table_id: tableId,
+          waiter_id: profile.id,
+          status: "OPEN",
+          channel,
+          customer_name: body.customer_name ?? null,
+          customer_phone: body.customer_phone ?? null,
+          delivery_address: body.delivery_address ?? null,
+          delivery_fee: Number(body.delivery_fee) || 0,
+          delivery_status: deliveryStatus,
+          courier_name: body.courier_name ?? null,
+          scheduled_for: body.scheduled_for ?? null,
+          notes: body.notes ?? null,
+        })
+        .select("id")
+        .single();
+      if (error || !created) throw new Error("Não foi possível abrir o atendimento.");
+      attendanceId = created.id;
     }
 
     const productIds = items.map((i) => i.product_id);
@@ -94,6 +125,7 @@ Deno.serve(
         waiter_id: profile.id,
         number,
         status: "SENT",
+        channel,
         notes: body.notes ?? null,
         sent_at: new Date().toISOString(),
       })
@@ -167,22 +199,28 @@ Deno.serve(
       );
     }
 
-    await admin.from("tables").update({ status: "OCCUPIED" }).eq("id", tableId);
-    const { data: att } = await admin.from("attendances").select("subtotal").eq("id", attendanceId).single();
+    if (tableId) {
+      await admin.from("tables").update({ status: "OCCUPIED" }).eq("id", tableId);
+    }
+
+    const { data: att } = await admin
+      .from("attendances")
+      .select("subtotal, delivery_fee")
+      .eq("id", attendanceId)
+      .single();
     const nextSubtotal = Number(att?.subtotal ?? 0) + subtotal;
+    const deliveryFee = Number(att?.delivery_fee ?? 0);
     await admin
       .from("attendances")
-      .update({ subtotal: nextSubtotal, total: nextSubtotal, status: "OPEN" })
+      .update({ subtotal: nextSubtotal, total: nextSubtotal + deliveryFee, status: "OPEN" })
       .eq("id", attendanceId);
 
-    await audit(admin, orgId, profile.id, "create", "order", order.id, { number, tableId });
-    await notifyKitchen(
-      admin,
-      orgId,
-      `Pedido #${number}`,
-      `Mesa ${table.number} — novo ticket na cozinha.`,
-      order.id,
-    );
+    await audit(admin, orgId, profile.id, "create", "order", order.id, { number, channel, tableId });
+    const origin =
+      channel === "SALAO"
+        ? `Mesa ${tableNumber ?? ""}`
+        : `${CHANNEL_LABEL[channel]}${body.customer_name ? ` — ${body.customer_name}` : ""}`;
+    await notifyKitchen(admin, orgId, `Pedido #${number}`, `${origin} — novo ticket na cozinha.`, order.id);
     return json({ order, attendance_id: attendanceId });
   }),
 );

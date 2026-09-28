@@ -1,8 +1,12 @@
-import type { UserRole } from "@/types";
+import type { Profile, UserRole } from "@/types";
 import { ADMIN_ROLES, CASH_ROLES, KITCHEN_ROLES, WAITER_ROLES } from "@/lib/constants";
 
 export function hasAnyRole(roles: UserRole[], allowed: UserRole[]) {
   return roles.some((role) => allowed.includes(role));
+}
+
+export function isSuperadmin(profile?: Pick<Profile, "is_superadmin"> | null) {
+  return Boolean(profile?.is_superadmin);
 }
 
 export function canManageCatalog(roles: UserRole[]) {

@@ -51,7 +51,7 @@ export async function listKitchenTickets(organizationId: string, sectorId?: stri
   let query = getSupabase()
     .from("kitchen_tickets")
     .select(
-      "*, sector:kitchen_sectors(*), order:orders(*, items:order_items(*, addons:order_item_addons(*)), waiter:profiles(*), table:tables(*))",
+      "*, sector:kitchen_sectors(*), order:orders(*, items:order_items(*, addons:order_item_addons(*)), waiter:profiles(*), table:tables(*), attendance:attendances(channel, customer_name))",
     )
     .eq("organization_id", organizationId)
     .in("status", ["NEW", "PREPARING", "READY"])
@@ -98,8 +98,20 @@ export async function listCashMovements(cashRegisterId: string) {
 export async function listWaitingAttendances(organizationId: string) {
   const { data, error } = await getSupabase()
     .from("attendances")
-    .select("*, table:tables(*), waiter:profiles(*)")
+    .select("*, table:tables(*), waiter:profiles(*), orders(status)")
     .eq("organization_id", organizationId)
+    .in("status", ["OPEN", "WAITING_PAYMENT"])
+    .order("opened_at");
+  if (error) throw error;
+  return (data ?? []) as Attendance[];
+}
+
+export async function listChannelAttendances(organizationId: string, channels: string[]) {
+  const { data, error } = await getSupabase()
+    .from("attendances")
+    .select("*, table:tables(*), waiter:profiles(*), orders(status)")
+    .eq("organization_id", organizationId)
+    .in("channel", channels)
     .in("status", ["OPEN", "WAITING_PAYMENT"])
     .order("opened_at");
   if (error) throw error;
@@ -130,8 +142,15 @@ export async function listInventory(organizationId: string) {
 }
 
 export async function createOrder(payload: {
-  table_id: string;
+  table_id?: string | null;
   attendance_id?: string;
+  channel?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  delivery_address?: string;
+  delivery_fee?: number;
+  courier_name?: string;
+  scheduled_for?: string | null;
   notes?: string;
   items: Array<{
     product_id: string;
@@ -141,6 +160,32 @@ export async function createOrder(payload: {
   }>;
 }) {
   return invokeFunction("create-order", payload as Record<string, unknown>);
+}
+
+export async function createPublicOrder(payload: {
+  slug: string;
+  customer_name: string;
+  customer_phone?: string;
+  order_type: "PICKUP" | "DELIVERY";
+  delivery_address?: string;
+  notes?: string;
+  items: Array<{ product_id: string; quantity: number; notes?: string }>;
+}) {
+  return invokeFunction<Record<string, unknown>, { number: number; total: number }>(
+    "create-public-order",
+    payload as Record<string, unknown>,
+  );
+}
+
+export async function updateDeliveryStatus(
+  attendanceId: string,
+  deliveryStatus: string,
+  courierName?: string,
+) {
+  const patch: Record<string, unknown> = { delivery_status: deliveryStatus };
+  if (courierName !== undefined) patch.courier_name = courierName;
+  const { error } = await getSupabase().from("attendances").update(patch).eq("id", attendanceId);
+  if (error) throw error;
 }
 
 export async function cancelOrder(orderId: string, reason?: string) {

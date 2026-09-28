@@ -6,7 +6,11 @@ export type AttendanceStatus = "OPEN" | "WAITING_PAYMENT" | "CLOSED" | "CANCELLE
 
 export type OrderStatus = "PENDING" | "SENT" | "PREPARING" | "READY" | "DELIVERED" | "CANCELLED";
 
-export type KitchenTicketStatus = "NEW" | "PREPARING" | "READY" | "CANCELLED";
+export type KitchenTicketStatus = "NEW" | "PREPARING" | "READY" | "DELIVERED" | "CANCELLED";
+
+export type OrderChannel = "SALAO" | "BALCAO" | "DELIVERY" | "WHATSAPP" | "ENCOMENDA" | "ONLINE";
+
+export type DeliveryStatus = "PENDING" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED";
 
 export type CashRegisterStatus = "OPEN" | "CLOSED";
 
@@ -57,6 +61,7 @@ export interface Profile {
   primary_role: UserRole;
   active: boolean;
   avatar_url: string | null;
+  is_superadmin?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -165,10 +170,18 @@ export interface Customer {
 export interface Attendance {
   id: string;
   organization_id: string;
-  table_id: string;
+  table_id: string | null;
   waiter_id: string | null;
   customer_id: string | null;
   status: AttendanceStatus;
+  channel: OrderChannel;
+  customer_name: string | null;
+  customer_phone: string | null;
+  delivery_address: string | null;
+  delivery_fee: number;
+  delivery_status: DeliveryStatus | null;
+  courier_name: string | null;
+  scheduled_for: string | null;
   opened_at: string;
   closed_at: string | null;
   subtotal: number;
@@ -182,16 +195,18 @@ export interface Attendance {
   updated_at: string;
   table?: DiningTable | null;
   waiter?: Profile | null;
+  orders?: Array<{ status: OrderStatus }>;
 }
 
 export interface Order {
   id: string;
   organization_id: string;
   attendance_id: string;
-  table_id: string;
+  table_id: string | null;
   waiter_id: string | null;
   number: number;
   status: OrderStatus;
+  channel: OrderChannel;
   notes: string | null;
   sent_at: string | null;
   created_at: string;
@@ -199,6 +214,7 @@ export interface Order {
   items?: OrderItem[];
   table?: DiningTable | null;
   waiter?: Profile | null;
+  attendance?: { channel: OrderChannel; customer_name: string | null } | null;
 }
 
 export interface OrderItem {
@@ -402,6 +418,42 @@ export interface PrinterStation {
   device_name: string | null;
   active: boolean;
   created_at: string;
+}
+
+export interface PlatformOrganization {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+  created_at: string;
+  plan_code: string | null;
+  plan_name: string | null;
+  price_cents: number;
+  subscription_status: string | null;
+  users: number;
+  tables: number;
+  orders: number;
+  sales_total: number;
+}
+
+export interface PublicMenu {
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    phone: string | null;
+    address: string | null;
+    logo_url: string | null;
+  };
+  categories: Array<{ id: string; name: string; sort_order: number }>;
+  products: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    price: number;
+    image_url: string | null;
+    category_id: string | null;
+  }>;
 }
 
 export interface DashboardMetrics {

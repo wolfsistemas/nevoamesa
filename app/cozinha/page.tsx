@@ -79,10 +79,12 @@ export default function KitchenPage() {
   }, [tickets, autoPrint, printerName]);
 
   async function advance(ticketId: string, current: KitchenTicketStatus, orderId?: string) {
-    const next = current === "NEW" ? "PREPARING" : current === "PREPARING" ? "READY" : "READY";
+    const next: KitchenTicketStatus =
+      current === "NEW" ? "PREPARING" : current === "PREPARING" ? "READY" : "DELIVERED";
     await updateKitchenTicket(ticketId, next);
     if (orderId) {
-      await markOrderStatus(orderId, next === "PREPARING" ? "PREPARING" : "READY");
+      const orderStatus = next === "PREPARING" ? "PREPARING" : next === "READY" ? "READY" : "DELIVERED";
+      await markOrderStatus(orderId, orderStatus);
     }
     queryClient.invalidateQueries({ queryKey: ["kitchen", orgId] });
   }
